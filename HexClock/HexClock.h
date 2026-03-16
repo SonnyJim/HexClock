@@ -30,10 +30,21 @@ bool ha_connected;
 bool fs_mounted;
 bool cfg_loaded;
 
+struct cfg_t 
+{
+  bool ftp_enabled;
+  char ftp_username[32];
+  char ftp_password[32];
+  bool ha_enabled;
+  char mqtt_addr[17];
+  char mqtt_username[17];
+  char mqtt_password[255];
+  uint8_t checksum;
+} cfg;
+
 #define LOGFILE "logfile.txt"
 File logfile;
 
-//FtpServer ftpSrv;   //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp verbose on serial
 enum anim_states {ANIM_NONE, ANIM_PRIDE, ANIM_PACIFICA, ANIM_BPM, ANIM_SINELON};
 const char *anim_names[] {"None", "Pride", "Pacifica", "BPM", "Sinelon"};
 extern void pride (void);
