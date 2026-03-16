@@ -1,7 +1,14 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <time.h>
 #include "FastLED.h"
 #include "secrets.h"
+#include <ArduinoHA.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+#include "LittleFS.h"
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebSrv.h>
 
 #if FASTLED_VERSION < 3001000
 #error "Requires FastLED 3.1 or later; check github for latest code."
@@ -15,6 +22,23 @@
 #define TIMEZONE    10
 
 CRGB leds[NUM_LEDS];
+CRGB ha_color;
+int ha_state;
+int ha_brightness;
+int anim_state;
+bool ha_connected;
+bool fs_mounted;
+bool cfg_loaded;
+
+#define LOGFILE "logfile.txt"
+File logfile;
+
+//FtpServer ftpSrv;   //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp verbose on serial
+enum anim_states {ANIM_NONE, ANIM_PRIDE, ANIM_PACIFICA, ANIM_BPM, ANIM_SINELON};
+const char *anim_names[] {"None", "Pride", "Pacifica", "BPM", "Sinelon"};
 extern void pride (void);
 extern void draw_hours (void);
 extern void draw_mins (void);
+extern void cfg_save (void);
+extern void ha_start (void);
+extern void log_write (String message);

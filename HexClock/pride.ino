@@ -1,5 +1,3 @@
-//#include "HexClock.h"
-
 void pride() 
 {
   static uint16_t sPseudotime = 0;
