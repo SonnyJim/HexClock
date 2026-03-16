@@ -1,15 +1,19 @@
 #define CFG_FILE "/cfg.bin"
 
+
+
 void cfg_print ()
 {
   Serial.println (String("FTP Username: ") + cfg.ftp_username);
   Serial.println (String("FTP Password: ") + cfg.ftp_password);
   Serial.println (String("MQTT: ") + cfg.mqtt_addr + " " + cfg.mqtt_username +" " + cfg.mqtt_password);
+  log_write(String("Home assistant enabled: ") + (cfg.ha_enabled ? "true" : "false"));
+  log_write (String("Timezone: ") + cfg.regioncity);
 }
 
 uint8_t cfg_get_checksum (void)
 {
-  uint8_t sum;
+  uint8_t sum = 0;
   unsigned char *p = (unsigned char *)&cfg;
   for (int i = 0; i < (sizeof(cfg) - sizeof(cfg.checksum)); i++)
   {
@@ -20,6 +24,7 @@ uint8_t cfg_get_checksum (void)
 
 void cfg_load ()
 {
+  log_write("cfg_load()");
   if (!fs_mounted)
   {
     Serial.println ("cfg_load: Filesystem not mounted");
@@ -29,21 +34,21 @@ void cfg_load ()
   File f = LittleFS.open(CFG_FILE, "r");
   if (!LittleFS.exists (CFG_FILE))
   {
-    Serial.println ("cfg_load: Could not find config file, loading defaults");
+    log_write ("cfg_load: Could not find config file, loading defaults");
     cfg_load_default();
     cfg_save ();
     return;
   }
   else if (!f)
   {
-    Serial.println (String("cfg_load: Error loading ") + CFG_FILE);
+    log_write (String("cfg_load: Error loading ") + CFG_FILE);
     return;
   }
   f.read((byte*) &cfg,sizeof(cfg));
   f.close();
   if (cfg.checksum != cfg_get_checksum())
   {
-    Serial.println ("cfg_load: Checksum error, loading defaults");
+    log_write ("cfg_load: Checksum error, loading defaults");
     cfg_load_default ();
   }
   return;
@@ -51,28 +56,30 @@ void cfg_load ()
 
 void cfg_save ()
 {
-  Serial.println ("Saving config.....");
+  log_write ("Saving config.....");
   if (!fs_mounted)
   {
-    Serial.println ("cfg_save: Filesystem not mounted, aborting..");
+    log_write ("cfg_save: Filesystem not mounted, aborting..");
     return;
   }
 
   File f = LittleFS.open(CFG_FILE, "w");
   if (!f)
   {
-    Serial.println (String("cfg_save: Error opening file for saving ") + CFG_FILE);
+    log_write (String("cfg_save: Error opening file for saving ") + CFG_FILE);
     return;
   }
   cfg.checksum = cfg_get_checksum ();
   if (f.write((byte*) &cfg,sizeof(cfg)))
-    Serial.println ("cfg_save: Saved successfully");
+    log_write ("cfg_save: Saved successfully");
   else
-    Serial.println ("cfg_save: Error writing cfg file");
+    log_write ("cfg_save: Error writing cfg file");
+  cfg_print();
 }
 
 void cfg_load_default ()
 {
+  log_write("cfg_load_default()");
   memset (&cfg, '\0', sizeof(cfg));
 
   cfg.ftp_enabled = false;
@@ -83,6 +90,7 @@ void cfg_load_default ()
   strcpy (cfg.mqtt_addr, DEFAULT_MQTT_ADDR);
   strcpy (cfg.mqtt_username, DEFAULT_MQTT_USERNAME);
   strcpy (cfg.mqtt_password, DEFAULT_MQTT_PASSWORD);
+  strcpy (cfg.regioncity, DEFAULT_REGIONCITY);
   
   cfg_loaded = true;
   cfg_save ();
@@ -92,7 +100,7 @@ void cfg_setup ()
 {
   cfg_loaded = false;
   fs_mounted = false;
-  Serial.println ("Mounting filesystem....");
+  log_write ("Mounting filesystem....");
   if (!LittleFS.begin())
   {
     Serial.println ("Error mounting Filesystem, loading default config");
@@ -101,7 +109,7 @@ void cfg_setup ()
   else
   {
     fs_mounted = true;
-    cfg_load_default ();
+    //cfg_load_default ();
     cfg_load ();
   }
 

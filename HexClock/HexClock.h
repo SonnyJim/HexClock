@@ -19,7 +19,8 @@
 #define COLOR_ORDER RGB
 #define NUM_LEDS    96
 #define BRIGHTNESS  255
-#define TIMEZONE    10
+//#define TIMEZONE    10
+#define DEFAULT_REGIONCITY "Europe/London"
 
 CRGB leds[NUM_LEDS];
 CRGB ha_color;
@@ -39,6 +40,7 @@ struct cfg_t
   char mqtt_addr[17];
   char mqtt_username[17];
   char mqtt_password[255];
+  char regioncity[50];
   uint8_t checksum;
 } cfg;
 
@@ -53,3 +55,4 @@ extern void draw_mins (void);
 extern void cfg_save (void);
 extern void ha_start (void);
 extern void log_write (String message);
+extern bool setTimezoneFromString(const char* regionCity);

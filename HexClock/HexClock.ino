@@ -10,9 +10,6 @@ const char* ESP_HOST_NAME = "esp-" + ESP.getFlashChipId();
 const char* ssid    = SECRET_SSID;
 const char* password = SECRET_PASSWORD;
 
-//Your time zone
-int timezone = TIMEZONE * 3600;
-int dst = 0;
 #include <TZ.h>
 
 

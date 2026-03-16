@@ -12,6 +12,16 @@ void draw_hours() {
   int hour = p_tm->tm_hour;
   if (hour > 23 || hour < 0)
     hour = 0;
+
+  if (hour == 0) {
+    r = 255;
+    g = 0;
+    b = 0;
+  } else {
+    r = 255;
+    g = 255;
+    b = 255;
+  }
   draw_pattern(hour_patterns[hour], hour_sizes[hour]);
 }
 

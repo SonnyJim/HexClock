@@ -1,15 +1,5 @@
 void ota_setup() {
-  // Port defaults to 8266
-  // ArduinoOTA.setPort(8266);
-
-  // Hostname defaults to esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword((const char *)"123");
-
   ArduinoOTA.onStart([]() {
-    //TODO probably want to signal to the user via the LEDs
     Serial.println("Start");
   });
   ArduinoOTA.onEnd([]() {

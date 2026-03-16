@@ -1,24 +1,111 @@
-<!DOCTYPE HTML><html><head>
-  <title>Hexclock configuration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head><body>
-  <form action="/get">
-    FTP enabled <input type="checkbox" name="ftp_enabled" %FTPENABLED%><br>
-    FTP Username: <input type="text" name="ftp_username" value="%FTPUSERNAME%"><br>
-    FTP Password: <input type="text" name="ftp_password" value="%FTPPASSWORD%"><br>
-    <br>
-    Home assistant %HA_STATUS%<br>
-    HA enabled <input type="checkbox" name="ha_enabled" %HAENABLED%><br>
-    MQTT Address: <input type="text" name="mqtt_addr" value="%MQTTADDR%"><br>
-    MQTT Username: <input type="text" name="mqtt_username" value="%MQTTUSERNAME%"><br>
-    MQTT Password: <input type="text" name="mqtt_password" value="%MQTTPASSWORD%"><br>
-    <br>
-    <label for="timezone">Choose a timezone:</label>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Device Time</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #time {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    // Auto-refresh every second
+    setInterval(() => {
+      fetch('/current_time')
+        .then(response => response.text())
+        .then(time => document.getElementById('time').innerText = time);
+    }, 1000);
+  </script>
+  <script>
+    var defaultRegion = "%DEFAULT_REGION%";
+    var defaultCity = "%DEFAULT_CITY%";
 
-    <select name="timezone" id="timezone">
-    %TZSELECT%
+    function loadCities(selectDefault=false)
+    {
+        var region = document.getElementById("region").value;
+
+        fetch("/tzlist?region=" + region)
+        .then(response => response.text())
+        .then(data => {
+
+            var cityBox = document.getElementById("city");
+            cityBox.innerHTML = data;
+
+            if (selectDefault)
+            {
+                for (var i = 0; i < cityBox.options.length; i++)
+                {
+                    if (cityBox.options[i].value === defaultCity)
+                    {
+                        cityBox.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    window.onload = function()
+    {
+        var regionBox = document.getElementById("region");
+
+        // Select default region
+        for (var i = 0; i < regionBox.options.length; i++) {
+            if (regionBox.options[i].value === defaultRegion) {
+                regionBox.selectedIndex = i;
+                break;
+            }
+        }
+
+        loadCities(true);
+    }
+  </script>
+</head>
+<body>
+  <div id="time">%CURRENT_TIME%</div>
+  <button onclick="window.location.href='/cfg'">Go to Configuration</button>
+  <h2>Select Timezone</h2>
+
+  <form action="/set_tz">
+
+    Region:<br>
+    <select id="region" name="region" onchange="loadCities(false)">
+      <option>Africa</option>
+      <option>America</option>
+      <option>Antarctica</option>
+      <option>Arctic</option>
+      <option>Asia</option>
+      <option>Atlantic</option>
+      <option>Australia</option>
+      <option>Etc</option>
+      <option>Europe</option>
+      <option>Indian</option>
+      <option>Pacific</option>
     </select>
-    <br>
-    <input type="submit" value="Submit">
-  </form><br>
-</body></html>
+
+    <br><br>
+
+    City:<br>
+    <select id="city" name="city">
+      <option>Loading...</option>
+    </select>
+
+    <br><br>
+
+    <input type="submit" value="Save">
+
+  </form>
+</body>
+</html>

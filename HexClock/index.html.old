@@ -1,0 +1,24 @@
+<!DOCTYPE HTML><html><head>
+  <title>Hexclock configuration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+  <form action="/get">
+    FTP enabled <input type="checkbox" name="ftp_enabled" %FTPENABLED%><br>
+    FTP Username: <input type="text" name="ftp_username" value="%FTPUSERNAME%"><br>
+    FTP Password: <input type="text" name="ftp_password" value="%FTPPASSWORD%"><br>
+    <br>
+    Home assistant %HA_STATUS%<br>
+    HA enabled <input type="checkbox" name="ha_enabled" %HAENABLED%><br>
+    MQTT Address: <input type="text" name="mqtt_addr" value="%MQTTADDR%"><br>
+    MQTT Username: <input type="text" name="mqtt_username" value="%MQTTUSERNAME%"><br>
+    MQTT Password: <input type="text" name="mqtt_password" value="%MQTTPASSWORD%"><br>
+    <br>
+    <label for="timezone">Choose a timezone:</label>
+
+    <select name="timezone" id="timezone">
+    %TZSELECT%
+    </select>
+    <br>
+    <input type="submit" value="Submit">
+  </form><br>
+</body></html>

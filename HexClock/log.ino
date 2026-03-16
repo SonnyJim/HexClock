@@ -1,10 +1,26 @@
-void log_write (String message)
+#include <time.h>
+
+void log_write(String message)
 {
-  Serial.println("LOG: " + message);
-  logfile = LittleFS.open (LOGFILE, "a");
- logfile.print(message);
- logfile.print("\n");
- logfile.close();
+    // Get current time from NTP
+    time_t now = time(nullptr);           // current epoch time
+    struct tm* tm_info = localtime(&now); // convert to local time
+
+    char timestamp[25];
+    // Format: YYYY-MM-DD HH:MM:SS
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", tm_info);
+
+    String log_entry = String(timestamp) + " LOG: " + message;
+
+    // Print to Serial
+    Serial.println(log_entry);
+
+    // Append to logfile
+    File logfile = LittleFS.open(LOGFILE, "a");
+    if (logfile) {
+        logfile.println(log_entry);
+        logfile.close();
+    }
 }
 
 void log_setup ()

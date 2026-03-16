@@ -12,12 +12,12 @@ void onMqttMessage(const char* topic, const uint8_t* payload, uint16_t length) {
   // This callback is called when message from MQTT broker is received.
   // Please note that you should always verify if the message's topic is the one you expect.
   // For example: if (memcmp(topic, "myCustomTopic") == 0) { ... }
-
+/*
   Serial.print("New message on topic: ");
   Serial.println(topic);
   Serial.print("Data: ");
   Serial.println((const char*)payload);
-
+*/
   //mqtt.publish("myCustomTopic", "hello");
 }
 
@@ -30,35 +30,41 @@ void onMqttConnected() {
 }
 
 void onStateCommand(bool state, HALight* sender) {
+  /*
   Serial.print("State: ");
   Serial.println(state);
+  */
   ha_state = state;
   sender->setState(state);  // report state back to the Home Assistant
 }
 
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
+  /*
   Serial.print("Brightness: ");
   Serial.println(brightness);
+  */
   ha_brightness = brightness;
   FastLED.setBrightness(brightness);
   sender->setBrightness(brightness);  // report brightness back to the Home Assistant
 }
 
 void onColorTemperatureCommand(uint16_t temperature, HALight* sender) {
+  /*
   Serial.print("Color temperature: ");
   Serial.println(temperature);
-
+*/
   sender->setColorTemperature(temperature);  // report color temperature back to the Home Assistant
 }
 
 void onRGBColorCommand(HALight::RGBColor color, HALight* sender) {
+  /*
   Serial.print("Red: ");
   Serial.println(color.red);
   Serial.print("Green: ");
   Serial.println(color.green);
   Serial.print("Blue: ");
   Serial.println(color.blue);
-
+*/
   ha_color.r = color.red;
   ;
   ha_color.g = color.green;
@@ -72,7 +78,7 @@ void onRGBColorCommand(HALight::RGBColor color, HALight* sender) {
     anim_state = ANIM_PACIFICA;
   else
     anim_state = ANIM_NONE;
-  Serial.println(anim_state);
+  //Serial.println(anim_state);
   sender->setRGBColor(color);  // report color back to the Home Assistant
 }
 
@@ -82,9 +88,9 @@ void ha_setup() {
   ha_connected = false;
   if (MDNS.begin("hexclock")) {
     // at this stage your device will be available using the domain name "arduinoha.local"
-    Serial.println("MDNS initialized - hexclock.local");
+    log_write("MDNS initialized - hexclock.local");
   } else {
-    Serial.println("Failed to initialize MDNS");
+    log_write("Failed to initialize MDNS");
     return;
   }
   // set device's details (optional)
@@ -124,7 +130,7 @@ void ha_start() {
   if (cfg.ha_enabled)
     mqtt.begin(cfg.mqtt_addr, cfg.mqtt_username, cfg.mqtt_password);
   else
-    Serial.println("ha_start (): Error!  Trying to start a disabled service");
+    log_write("ha_start (): Error!  Trying to start a disabled service");
 }
 void ha_loop() {
   mqtt.loop();
