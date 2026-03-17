@@ -47,6 +47,7 @@ struct cfg_t
 } cfg;
 
 #define LOGFILE "logfile.txt"
+#define LOGFILE_SIZE  (100 * 1024) // Actually as much as 200 KB as we keep one old log
 File logfile;
 
 enum anim_states {ANIM_NONE, ANIM_PRIDE, ANIM_PACIFICA, ANIM_BPM, ANIM_SINELON};

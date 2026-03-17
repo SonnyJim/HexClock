@@ -1,60 +1,5 @@
 #include "timez.h"
-
 AsyncWebServer httpd(80);
-//DNSServer dns;
-
-const char cfg_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Hexclock Configuration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-  <h2>Device Configuration</h2>
-  <form action="/get" method="get">
-    <label>
-      FTP enabled 
-      <input type="checkbox" name="ftp_enabled" %FTPENABLED%>
-    </label><br><br>
-
-    <label>
-      FTP Username: 
-      <input type="text" name="ftp_username" value="%FTPUSERNAME%">
-    </label><br><br>
-
-    <label>
-      FTP Password: 
-      <input type="text" name="ftp_password" value="%FTPPASSWORD%">
-    </label><br><br>
-
-    <label>
-      Home Assistant %HA_STATUS%
-    </label><br>
-    <label>
-      HA enabled 
-      <input type="checkbox" name="ha_enabled" %HAENABLED%>
-    </label><br><br>
-
-    <label>
-      MQTT Address: 
-      <input type="text" name="mqtt_addr" value="%MQTTADDR%">
-    </label><br><br>
-
-    <label>
-      MQTT Username: 
-      <input type="text" name="mqtt_username" value="%MQTTUSERNAME%">
-    </label><br><br>
-
-    <label>
-      MQTT Password: 
-      <input type="text" name="mqtt_password" value="%MQTTPASSWORD%">
-    </label><br><br>
-    <input type="submit" value="Save Settings">
-  </form>
-</body>
-</html>
-)rawliteral";
 
 void sendTZOptions(AsyncWebServerRequest *request,
                    const char *const table[][2],
@@ -139,17 +84,52 @@ void handleSetTZ(AsyncWebServerRequest *request) {
     cfg_save();
     // Send HTML that shows success and redirects after 3 seconds
     String html = "<!DOCTYPE html><html><head>"
-                  "<meta http-equiv='refresh' content='3;url="
-                  + request->header("Referer") + "'>"
-                                                 "<title>Timezone Set</title></head>"
-                                                 "<body>"
-                                                 "<p>Timezone set to "
+                  "<meta http-equiv='refresh' content='3;url=/cfg'>"
+                  "<title>Timezone Set</title></head>"
+                  "<body>"
+                  "<p>Timezone set to "
                   + tz + ".</p>"
                          "<p>Returning to previous page in 3 seconds...</p>"
                          "</body></html>";
     request->send(200, "text/html", html);
   } else
     request->send(500, "text/plain", "Failed to set timezone");
+}
+
+void sendLogs(AsyncWebServerRequest *request) {
+    String oldLogFile = String(LOGFILE) + ".old";
+
+    // Lambda to stream two files sequentially
+    static File files[2];
+    static int currentFile = 0;
+    static bool initDone = false;
+
+    auto streamFiles = [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+        while (currentFile < 2) {
+            if (!files[currentFile]) { currentFile++; continue; }
+
+            size_t bytesRead = files[currentFile].read(buffer, maxLen);
+            if (bytesRead > 0) return bytesRead;
+
+            files[currentFile].close();
+            currentFile++;
+        }
+
+        // All done
+        initDone = false;
+        return 0;
+    };
+
+    if (!initDone) {
+        files[0] = LittleFS.open(LOGFILE, "r");
+        files[1] = LittleFS.open(oldLogFile, "r");
+        currentFile = 0;
+        initDone = true;
+    }
+
+    // Correct type is AsyncWebServerResponse*
+    AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", streamFiles);
+    request->send(response);
 }
 
 // Replaces vars in webpage output
@@ -162,9 +142,9 @@ String processor(const String &var) {
     return ha_connected ? "Connected" : "Not connected";
   } else if (var == "ANIM") {
     return anim_names[anim_state];
-  } else if (var == "FTPUSERNAME") {
+  } else if (var == "USERNAME") {
     return cfg.username;
-  } else if (var == "FTPPASSWORD") {
+  } else if (var == "PASSWORD") {
     return cfg.password;
   } else if (var == "MQTTADDR") {
     return cfg.mqtt_addr;
@@ -198,12 +178,11 @@ void notFound(AsyncWebServerRequest *request) {
 void web_setup() {
   if (fs_mounted) {
     log_write("Starting web services......");
-    //if (cfg.ftp_enabled)
-    //  ftpSrv.begin(cfg.ftp_username,cfg.ftp_password);
 
     httpd.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(LittleFS, "/index.html", String(), false, processor);
     });
+
     httpd.on("/current_time", HTTP_GET, [](AsyncWebServerRequest *request) {
       time_t now = time(nullptr);  // get current epoch time
       struct tm timeinfo;
@@ -214,18 +193,26 @@ void web_setup() {
 
       request->send(200, "text/plain", String(buf));
     });
+
     httpd.on("/tzlist", HTTP_GET, handleTZList);
     httpd.on("/set_tz", HTTP_GET, handleSetTZ);
+    httpd.on("/tzset", HTTP_GET, [](AsyncWebServerRequest *request) {
+      if (!request->authenticate(cfg.username, cfg.password)) {
+        return request->requestAuthentication();  // Sends 401 and browser shows login dialog
+      }
+      request->send(LittleFS, "/tzset.html", String(), false, processor);
+    });
 
     httpd.on("/log", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(LittleFS, LOGFILE, String(), false, processor);
+      sendLogs(request);
     });
+
     //Serve the config page
     httpd.on("/cfg", HTTP_GET, [](AsyncWebServerRequest *request) {
       if (!request->authenticate(cfg.username, cfg.password)) {
         return request->requestAuthentication();  // Sends 401 and browser shows login dialog
-     }
-      request->send_P(200, "text/html", cfg_html, processor);
+      }
+      request->send(LittleFS, "/cfg.html", String(), false, processor);
     });
     //Handle the GET requestions
     httpd.on("/get", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -236,9 +223,7 @@ void web_setup() {
       String inputParam;
       bool cfg_changed = false;
       if (request->hasParam("ftp_enabled")) {
-        //strncpy (cfg._password, request->getParam("mqtt_password")->value().c_str(), sizeof(cfg.mqtt_password));
-        //inputParam = request->getParam("ftp_enabled")->value();
-        //Serial.println(String("Checkbox: ") + inputParam);
+
         if (cfg.ftp_enabled == false) {
           cfg.ftp_enabled = true;
           cfg_changed = true;
@@ -261,12 +246,12 @@ void web_setup() {
         cfg.ha_enabled = false;
       }
 
-      if (request->hasParam("ftp_username")) {
-        strncpy(cfg.username, request->getParam("ftp_username")->value().c_str(), sizeof(cfg.username));
+      if (request->hasParam("username")) {
+        strncpy(cfg.username, request->getParam("username")->value().c_str(), sizeof(cfg.username));
         cfg_changed = true;
       }
-      if (request->hasParam("ftp_password")) {
-        strncpy(cfg.password, request->getParam("ftp_password")->value().c_str(), sizeof(cfg.password));
+      if (request->hasParam("password")) {
+        strncpy(cfg.password, request->getParam("password")->value().c_str(), sizeof(cfg.password));
         cfg_changed = true;
       }
       if (request->hasParam("mqtt_addr")) {
@@ -286,12 +271,8 @@ void web_setup() {
       }
       if (cfg_changed) {
         cfg_save();
-        //ftpSrv.end(); //Restart FTP server to update password
-        //if (cfg.ftp_enabled)
-        //  ftpSrv.begin(cfg.ftp_username,cfg.ftp_password);
         mqtt.disconnect();
         ha_start();
-        //mqtt.begin(cfg.mqtt_addr,cfg.mqtt_username, cfg.mqtt_password);
       }
       request->send(200, "text/html", "Settings saved<br><a href=\"/cfg\">Return to configuration</a>");
     });

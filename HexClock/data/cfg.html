@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hexclock Configuration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 20px; }
+    form { display: inline-block; text-align: left; }
+    input[type="text"], input[type="password"] { width: 200px; }
+    button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Device Configuration</h2>
+  <form action="/get" method="get">
+    <label>
+      FTP enabled 
+      <input type="checkbox" name="ftp_enabled" %FTPENABLED%>
+    </label><br><br>
+
+    <label>
+      Username: 
+      <input type="text" name="username" value="%USERNAME%">
+    </label><br><br>
+
+    <label>
+      Password: 
+      <input type="text" name="password" value="%PASSWORD%">
+    </label><br><br>
+
+    <label>
+      Home Assistant %HA_STATUS%
+    </label><br>
+    <label>
+      HA enabled 
+      <input type="checkbox" name="ha_enabled" %HAENABLED%>
+    </label><br><br>
+
+    <label>
+      MQTT Address: 
+      <input type="text" name="mqtt_addr" value="%MQTTADDR%">
+    </label><br><br>
+
+    <label>
+      MQTT Username: 
+      <input type="text" name="mqtt_username" value="%MQTTUSERNAME%">
+    </label><br><br>
+
+    <label>
+      MQTT Password: 
+      <input type="text" name="mqtt_password" value="%MQTTPASSWORD%">
+    </label><br><br>
+
+    <!-- Save & Cancel next to each other -->
+    <div>
+      <button type="submit">Save</button>
+      <button type="button" onclick="window.location.href='/'">Cancel</button>
+      <button type="button" onclick="window.location.href='/tzset'">Set Timezone</button>
+      <button type="button" onclick="window.location.href='/log'">View Logs</button>
+    </div>
+  </form>
+</body>
+</html>

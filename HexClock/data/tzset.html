@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hexclock: Set timezone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #time {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    var defaultRegion = "%DEFAULT_REGION%";
+    var defaultCity = "%DEFAULT_CITY%";
+
+    function loadCities(selectDefault=false)
+    {
+        var region = document.getElementById("region").value;
+
+        fetch("/tzlist?region=" + region)
+        .then(response => response.text())
+        .then(data => {
+
+            var cityBox = document.getElementById("city");
+            cityBox.innerHTML = data;
+
+            if (selectDefault)
+            {
+                for (var i = 0; i < cityBox.options.length; i++)
+                {
+                    if (cityBox.options[i].value === defaultCity)
+                    {
+                        cityBox.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    window.onload = function()
+    {
+        var regionBox = document.getElementById("region");
+
+        // Select default region
+        for (var i = 0; i < regionBox.options.length; i++) {
+            if (regionBox.options[i].value === defaultRegion) {
+                regionBox.selectedIndex = i;
+                break;
+            }
+        }
+
+        loadCities(true);
+    }
+  </script>
+</head>
+<body>
+  <h2>Select Timezone</h2>
+
+  <form action="/set_tz">
+
+    Region:<br>
+    <select id="region" name="region" onchange="loadCities(false)">
+      <option>Africa</option>
+      <option>America</option>
+      <option>Antarctica</option>
+      <option>Arctic</option>
+      <option>Asia</option>
+      <option>Atlantic</option>
+      <option>Australia</option>
+      <option>Etc</option>
+      <option>Europe</option>
+      <option>Indian</option>
+      <option>Pacific</option>
+    </select>
+
+    <br><br>
+
+    City:<br>
+    <select id="city" name="city">
+      <option>Loading...</option>
+    </select>
+
+    <br><br>
+
+    <input type="submit" value="Save">
+
+  </form>
+</body>
+</html>

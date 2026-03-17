@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Device Time</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAD////////////////9/fz//v79///////y6Nz/uolX/5B0Uf/h39X///////7+/v/7/vz//v7+//////////////////7+/f/+/v3///////b37/+825D/p4Iv/65aH/90eCb/fqcr/7PCbP/u9Of///////3+/f/9/f3//////////////////////8W4oP+Chi//fsAo/5yDKv+JeCL/d5sq/3+rKf+ElQH/RKYw/4DUov/3+PX///////7//v//////8uff/8GedP9mRAH/dHQa/6icQP+6dDz/jH4r/3iPHf+EoBv/kp8a/zSoL/8Anyr/Kno6/7vTwP///////////8+Oi/+sW0L/e38n/3eqJf+doD3/pHA3/3pbKv9taCL/gpQo/0Tgbv8frFP/G5U5/wBaDf9bj2X////////////Pio7/vlRa/+jv1v+m0XP/YJka/1aIFP9mcyP/jWMn/6ZgGP+InU7/PqBX/yV7L/8EnCf/Z7F3////////////r3aZ/50/Xv/78/L//////9PdwP+Flkb/ZlUD/3RTCP+1j1n//+Lb/2Dcn/8OoEX/BK0n/2TSfP///////////6Zznf9vGVj/wnN4/+/Z1/////////79/9XHoP/b07D///////////9V7KP/AOJw/xXWZP9q14v////////////aiMX/nzR//6c2Pv/JfYL///////Pz+f+Your/h5Hj/+jr9v//////xfbh/znllv8Z7Xn/e/Wx////////////7IjP/+JSvP/tw8X/5baw///////W2PD/KTi2/xsssv/Eyez////////+///u+v7/KNO8/3Xsuv///////////+Ow5f/fbsT/5eP6/4+W7/+9u/H///////T1+//z9Pv//////7Xz9f9r4ez/w/j4/ybN7P9w3e/////////////bvfP/u4Xt/3pl4/8zO9X/gInl//j5/v//////2eX9/1+N8/8Tnuf/G8Dj/3aN6/9gfuf/ec7v////////////6dn6/66A8v+bUvH/izLz/96z/v/y9Pz/j5Lo/zRN5f8aUvD/Jnju/zqG5f+DWOr/v3rz/+vj/P/////////////////9/f7/x5P7/4kU+P+FIPT/j2rs/0lG2/8yPcr/HTS7/w5Xyf82muT/sNn1///+///+///////////////+/v///v7////////07f7/xq31/5pe8v+EI/n/Swjf/ycouv+Ijtb/9ff9///////+/f///v7////////////////////+///9/P///v3////////k0P7/jjH8/59E/v/s3v7///////79///8/f//////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" />
+
   <style>
     body {
       font-family: sans-serif;
@@ -28,84 +31,9 @@
         .then(time => document.getElementById('time').innerText = time);
     }, 1000);
   </script>
-  <script>
-    var defaultRegion = "%DEFAULT_REGION%";
-    var defaultCity = "%DEFAULT_CITY%";
-
-    function loadCities(selectDefault=false)
-    {
-        var region = document.getElementById("region").value;
-
-        fetch("/tzlist?region=" + region)
-        .then(response => response.text())
-        .then(data => {
-
-            var cityBox = document.getElementById("city");
-            cityBox.innerHTML = data;
-
-            if (selectDefault)
-            {
-                for (var i = 0; i < cityBox.options.length; i++)
-                {
-                    if (cityBox.options[i].value === defaultCity)
-                    {
-                        cityBox.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
-        });
-    }
-
-    window.onload = function()
-    {
-        var regionBox = document.getElementById("region");
-
-        // Select default region
-        for (var i = 0; i < regionBox.options.length; i++) {
-            if (regionBox.options[i].value === defaultRegion) {
-                regionBox.selectedIndex = i;
-                break;
-            }
-        }
-
-        loadCities(true);
-    }
-  </script>
 </head>
 <body>
   <div id="time">%CURRENT_TIME%</div>
   <button onclick="window.location.href='/cfg'">Go to Configuration</button>
-  <h2>Select Timezone</h2>
-
-  <form action="/set_tz">
-
-    Region:<br>
-    <select id="region" name="region" onchange="loadCities(false)">
-      <option>Africa</option>
-      <option>America</option>
-      <option>Antarctica</option>
-      <option>Arctic</option>
-      <option>Asia</option>
-      <option>Atlantic</option>
-      <option>Australia</option>
-      <option>Etc</option>
-      <option>Europe</option>
-      <option>Indian</option>
-      <option>Pacific</option>
-    </select>
-
-    <br><br>
-
-    City:<br>
-    <select id="city" name="city">
-      <option>Loading...</option>
-    </select>
-
-    <br><br>
-
-    <input type="submit" value="Save">
-
-  </form>
 </body>
 </html>

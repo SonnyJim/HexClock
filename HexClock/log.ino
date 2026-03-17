@@ -1,5 +1,32 @@
 #include <time.h>
 
+
+static String getOldLogFileName() {
+    return String(LOGFILE) + ".old";
+}
+
+static void log_rotate_if_needed() {
+    if (LittleFS.exists(LOGFILE)) {
+        File f = LittleFS.open(LOGFILE, "r");
+        if (f) {
+            size_t size = f.size();
+            f.close();
+            if (size >= LOGFILE_SIZE) {
+                String oldFile = getOldLogFileName();
+
+                // Delete old rotated file if it exists
+                if (LittleFS.exists(oldFile)) {
+                    LittleFS.remove(oldFile);
+                }
+
+                // Rename current log to old
+                LittleFS.rename(LOGFILE, oldFile);
+            }
+        }
+    }
+}
+
+
 void log_write(String message)
 {
     // Get current time from NTP
@@ -14,7 +41,7 @@ void log_write(String message)
 
     // Print to Serial
     Serial.println(log_entry);
-
+    log_rotate_if_needed();
     // Append to logfile
     File logfile = LittleFS.open(LOGFILE, "a");
     if (logfile) {
