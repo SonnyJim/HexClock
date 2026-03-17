@@ -2,7 +2,6 @@
 #include <ESP8266mDNS.h>
 #include <time.h>
 #include "FastLED.h"
-#include "secrets.h"
 #include <ArduinoHA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
@@ -23,6 +22,10 @@
 #define DEFAULT_REGIONCITY "Europe/London"
 #define DEFAULT_USERNAME  "hexclock"
 #define DEFAULT_PASSWORD  "groovy"
+#define DEFAULT_MQTT_ADDR "192.168.0.100"
+#define DEFAULT_MQTT_USERNAME     "homeassistant" // replace with your credentials
+#define DEFAULT_MQTT_PASSWORD     ""
+#define OTA_PASSWORD "heebygeebees"
 
 CRGB leds[NUM_LEDS];
 CRGB ha_color;
@@ -43,6 +46,8 @@ struct cfg_t
   char mqtt_username[17];
   char mqtt_password[255];
   char regioncity[50];
+  char wifi_essid[32];
+  char wifi_password[64];
   uint8_t checksum;
 } cfg;
 

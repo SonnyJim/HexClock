@@ -6,36 +6,9 @@ int g=255;
 int b=255;
 
 const char* ESP_HOST_NAME = "esp-" + ESP.getFlashChipId();
-//Your Wifi info
-const char* ssid    = SECRET_SSID;
-const char* password = SECRET_PASSWORD;
 
 #include <TZ.h>
-
-
 WiFiClient wifiClient;
-
-void connectWifi() 
-{ 
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  //Serial.setDebugOutput(true);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-    delay(1000);
-    Serial.print(".");
-    Serial.print(WiFi.status());
-
-  }
-  Serial.println("");
-  Serial.println("WiFi connected!");
-  Serial.println(WiFi.localIP());
-  Serial.println();
-
-}
 
 void setup() {
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS)
@@ -52,17 +25,15 @@ void setup() {
   Serial.println();
   Serial.println();
   Serial.println("******************* BOOT *******************");
-  connectWifi();
   cfg_setup (); //Also mounts LittleFS
   log_setup ();
-
-  //TODO Fallback to Hotspot
+  wifi_setup();
    
   for (int i = 0; i < NUM_LEDS;i++)
     leds[i] = CRGB(0,255,0);
   FastLED.show();
   
-  //Serial.println ("Setting up OTA");
+
   ota_setup();
   ftp_setup();
   
@@ -89,7 +60,6 @@ void loop()
 
     if (!ha_connected)
       cube();
-      //pride();
     else if (ha_state)
     {
       switch (anim_state)

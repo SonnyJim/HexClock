@@ -30,7 +30,7 @@
 
     <label>
       Home Assistant %HA_STATUS%
-    </label><br>
+    </label><br><br>
     <label>
       HA enabled 
       <input type="checkbox" name="ha_enabled" %HAENABLED%>
@@ -50,11 +50,9 @@
       MQTT Password: 
       <input type="text" name="mqtt_password" value="%MQTTPASSWORD%">
     </label><br><br>
-
-    <!-- Save & Cancel next to each other -->
     <div>
       <button type="submit">Save</button>
-      <button type="button" onclick="window.location.href='/'">Cancel</button>
+      <button type="button" onclick="window.location.href='/'">Back</button>
       <button type="button" onclick="window.location.href='/tzset'">Set Timezone</button>
       <button type="button" onclick="window.location.href='/log'">View Logs</button>
     </div>

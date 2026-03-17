@@ -1,11 +1,11 @@
 #define CFG_FILE "/cfg.bin"
 
-
-
 void cfg_print ()
 {
   Serial.println (String("Username: ") + cfg.username);
   Serial.println (String("Password: ") + cfg.password);
+  Serial.println (String("ESSID: ") + cfg.wifi_essid);
+  Serial.println (String("Wifi Password: ") + cfg.wifi_password);
   Serial.println (String("MQTT: ") + cfg.mqtt_addr + " " + cfg.mqtt_username +" " + cfg.mqtt_password);
   log_write(String("Home assistant enabled: ") + (cfg.ha_enabled ? "true" : "false"));
   log_write (String("Timezone: ") + cfg.regioncity);
@@ -91,7 +91,8 @@ void cfg_load_default ()
   strcpy (cfg.mqtt_username, DEFAULT_MQTT_USERNAME);
   strcpy (cfg.mqtt_password, DEFAULT_MQTT_PASSWORD);
   strcpy (cfg.regioncity, DEFAULT_REGIONCITY);
-  
+  strcpy (cfg.wifi_essid, "");
+  strcpy (cfg.wifi_password, "");
   cfg_loaded = true;
   cfg_save ();
 }
@@ -109,7 +110,6 @@ void cfg_setup ()
   else
   {
     fs_mounted = true;
-    //cfg_load_default ();
     cfg_load ();
   }
 

@@ -1,10 +1,10 @@
 void ota_setup() {
   ArduinoOTA.onStart([]() {
-    log_write("\n********\nOTA Start\n********\n");
+    log_write("\n\n********\nOTA Start\n********\n");
   });
 
   ArduinoOTA.onEnd([]() {
-    log_write("\n********\nOTA End\n********\n");
+    log_write("\n\n********\nOTA End\n********\n");
   });
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {

@@ -17,6 +17,10 @@
       font-size: 2em;
       margin-bottom: 20px;
     }
+    .location {
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
     button {
       font-size: 1em;
       padding: 10px 20px;
@@ -33,6 +37,9 @@
   </script>
 </head>
 <body>
+  <div class="location">
+    %DEFAULT_REGION%/%DEFAULT_CITY%<br>
+  </div>
   <div id="time">%CURRENT_TIME%</div>
   <button onclick="window.location.href='/cfg'">Go to Configuration</button>
 </body>

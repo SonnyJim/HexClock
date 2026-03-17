@@ -96,39 +96,77 @@ void handleSetTZ(AsyncWebServerRequest *request) {
     request->send(500, "text/plain", "Failed to set timezone");
 }
 
+struct LogStreamContext {
+    File files[2];     // 0 = old log, 1 = current log
+    int stage;         // 0=header,1=old,2=current,3=footer
+};
+
 void sendLogs(AsyncWebServerRequest *request) {
     String oldLogFile = String(LOGFILE) + ".old";
 
-    // Lambda to stream two files sequentially
-    static File files[2];
-    static int currentFile = 0;
-    static bool initDone = false;
+    // Allocate context on heap so it persists across chunks
+    LogStreamContext *ctx = new LogStreamContext();
+    ctx->stage = 0;
+    ctx->files[0] = ctx->files[1] = File(); // initialize
 
-    auto streamFiles = [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-        while (currentFile < 2) {
-            if (!files[currentFile]) { currentFile++; continue; }
+    // ESP8266: beginChunkedResponse returns AsyncWebServerResponse*
+    AsyncWebServerResponse *response = request->beginChunkedResponse(
+        "text/html",
+        [ctx, oldLogFile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+            size_t n = 0;
 
-            size_t bytesRead = files[currentFile].read(buffer, maxLen);
-            if (bytesRead > 0) return bytesRead;
+            // Header
+            if (ctx->stage == 0) {
+                const char *header = "<!DOCTYPE html><html><head><title>Logs</title></head>"
+                                     "<body><button onclick=\"window.history.back()\">Back</button><pre>\n";
+                n = strlen(header);
+                if (n > maxLen) n = maxLen;
+                memcpy(buffer, header, n);
+                ctx->stage = 1;
+                return n;
+            }
 
-            files[currentFile].close();
-            currentFile++;
-        }
+            // Old log
+            if (ctx->stage == 1) {
+                if (!ctx->files[0]) ctx->files[0] = LittleFS.open(oldLogFile, "r");
+                if (ctx->files[0]) {
+                    n = ctx->files[0].read(buffer, maxLen);
+                    if (n > 0) return n;
+                    ctx->files[0].close();
+                    ctx->stage = 2;
+                } else {
+                    ctx->stage = 2;
+                }
+            }
 
-        // All done
-        initDone = false;
-        return 0;
-    };
+            // Current log
+            if (ctx->stage == 2) {
+                if (!ctx->files[1]) ctx->files[1] = LittleFS.open(LOGFILE, "r");
+                if (ctx->files[1]) {
+                    n = ctx->files[1].read(buffer, maxLen);
+                    if (n > 0) return n;
+                    ctx->files[1].close();
+                    ctx->stage = 3;
+                } else {
+                    ctx->stage = 3;
+                }
+            }
 
-    if (!initDone) {
-        files[0] = LittleFS.open(LOGFILE, "r");
-        files[1] = LittleFS.open(oldLogFile, "r");
-        currentFile = 0;
-        initDone = true;
-    }
+            // Footer
+            if (ctx->stage == 3) {
+                const char *footer = "\n</pre></body></html>";
+                n = strlen(footer);
+                if (n > maxLen) n = maxLen;
+                memcpy(buffer, footer, n);
+                ctx->stage = 4;
+                return n;
+            }
 
-    // Correct type is AsyncWebServerResponse*
-    AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", streamFiles);
+            // Done: free context
+            delete ctx;
+            return 0; // signal end of chunked response
+        });
+
     request->send(response);
 }
 
