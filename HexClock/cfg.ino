@@ -4,8 +4,8 @@
 
 void cfg_print ()
 {
-  Serial.println (String("FTP Username: ") + cfg.ftp_username);
-  Serial.println (String("FTP Password: ") + cfg.ftp_password);
+  Serial.println (String("Username: ") + cfg.username);
+  Serial.println (String("Password: ") + cfg.password);
   Serial.println (String("MQTT: ") + cfg.mqtt_addr + " " + cfg.mqtt_username +" " + cfg.mqtt_password);
   log_write(String("Home assistant enabled: ") + (cfg.ha_enabled ? "true" : "false"));
   log_write (String("Timezone: ") + cfg.regioncity);
@@ -84,8 +84,8 @@ void cfg_load_default ()
 
   cfg.ftp_enabled = false;
   
-  strcpy (cfg.ftp_username, DEFAULT_FTP_USERNAME);
-  strcpy (cfg.ftp_password, DEFAULT_FTP_PASSWORD);
+  strcpy (cfg.username, DEFAULT_USERNAME);
+  strcpy (cfg.password, DEFAULT_PASSWORD);
   cfg.ha_enabled = true;
   strcpy (cfg.mqtt_addr, DEFAULT_MQTT_ADDR);
   strcpy (cfg.mqtt_username, DEFAULT_MQTT_USERNAME);

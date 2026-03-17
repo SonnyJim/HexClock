@@ -34,6 +34,7 @@ void connectWifi()
   Serial.println("WiFi connected!");
   Serial.println(WiFi.localIP());
   Serial.println();
+
 }
 
 void setup() {
@@ -63,6 +64,7 @@ void setup() {
   
   //Serial.println ("Setting up OTA");
   ota_setup();
+  ftp_setup();
   
   for (int i = 0; i < NUM_LEDS;i++)
     leds[i] = CRGB(0,0,255);
@@ -83,6 +85,7 @@ void setup() {
 void loop()
 {
    ota_loop();
+   ftp_loop();
 
     if (!ha_connected)
       cube();
@@ -120,8 +123,7 @@ void loop()
     //bpm();
     //sinelon();
     //juggle();
-    draw_hours();
-    draw_mins();
+    draw_time();
     FastLED.show(); 
     ha_loop(); 
     

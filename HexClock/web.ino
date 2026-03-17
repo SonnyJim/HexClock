@@ -1,24 +1,60 @@
 #include "timez.h"
 
 AsyncWebServer httpd(80);
+//DNSServer dns;
 
 const char cfg_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html><head>
-  <title>Hexclock configuration</title>
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hexclock Configuration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head><body>
-  <form action="/get">
-    FTP enabled <input type="checkbox" name="ftp_enabled" %FTPENABLED%><br>
-    FTP Username: <input type="text" name="ftp_username" value="%FTPUSERNAME%"><br>
-    FTP Password: <input type="text" name="ftp_password" value="%FTPPASSWORD%"><br>
-    <br>
-    Home assistant %HA_STATUS%<br>
-    HA enabled <input type="checkbox" name="ha_enabled" %HAENABLED%><br>
-    MQTT Address: <input type="text" name="mqtt_addr" value="%MQTTADDR%"><br>
-    MQTT Username: <input type="text" name="mqtt_username" value="%MQTTUSERNAME%"><br>
-    MQTT Password: <input type="text" name="mqtt_password" value="%MQTTPASSWORD%"><br>
-  </form><br>
-</body></html>)rawliteral";
+</head>
+<body>
+  <h2>Device Configuration</h2>
+  <form action="/get" method="get">
+    <label>
+      FTP enabled 
+      <input type="checkbox" name="ftp_enabled" %FTPENABLED%>
+    </label><br><br>
+
+    <label>
+      FTP Username: 
+      <input type="text" name="ftp_username" value="%FTPUSERNAME%">
+    </label><br><br>
+
+    <label>
+      FTP Password: 
+      <input type="text" name="ftp_password" value="%FTPPASSWORD%">
+    </label><br><br>
+
+    <label>
+      Home Assistant %HA_STATUS%
+    </label><br>
+    <label>
+      HA enabled 
+      <input type="checkbox" name="ha_enabled" %HAENABLED%>
+    </label><br><br>
+
+    <label>
+      MQTT Address: 
+      <input type="text" name="mqtt_addr" value="%MQTTADDR%">
+    </label><br><br>
+
+    <label>
+      MQTT Username: 
+      <input type="text" name="mqtt_username" value="%MQTTUSERNAME%">
+    </label><br><br>
+
+    <label>
+      MQTT Password: 
+      <input type="text" name="mqtt_password" value="%MQTTPASSWORD%">
+    </label><br><br>
+    <input type="submit" value="Save Settings">
+  </form>
+</body>
+</html>
+)rawliteral";
 
 void sendTZOptions(AsyncWebServerRequest *request,
                    const char *const table[][2],
@@ -99,21 +135,20 @@ void handleSetTZ(AsyncWebServerRequest *request) {
   String tz = region + "/" + city;
   tz.toCharArray(cfg.regioncity, sizeof(cfg.regioncity));
 
-  if (setTimezoneFromString(tz.c_str()))
-  {
+  if (setTimezoneFromString(tz.c_str())) {
     cfg_save();
     // Send HTML that shows success and redirects after 3 seconds
     String html = "<!DOCTYPE html><html><head>"
-                  "<meta http-equiv='refresh' content='3;url=" + 
-                  request->header("Referer") + "'>"
-                  "<title>Timezone Set</title></head>"
-                  "<body>"
-                  "<p>Timezone set to " + tz + ".</p>"
-                  "<p>Returning to previous page in 3 seconds...</p>"
-                  "</body></html>";
+                  "<meta http-equiv='refresh' content='3;url="
+                  + request->header("Referer") + "'>"
+                                                 "<title>Timezone Set</title></head>"
+                                                 "<body>"
+                                                 "<p>Timezone set to "
+                  + tz + ".</p>"
+                         "<p>Returning to previous page in 3 seconds...</p>"
+                         "</body></html>";
     request->send(200, "text/html", html);
-  }
-  else
+  } else
     request->send(500, "text/plain", "Failed to set timezone");
 }
 
@@ -121,49 +156,38 @@ void handleSetTZ(AsyncWebServerRequest *request) {
 String processor(const String &var) {
   if (var == "FTPENABLED") {
     return cfg.ftp_enabled ? "checked" : "";
-  } 
-  else if (var == "HAENABLED") {
+  } else if (var == "HAENABLED") {
     return cfg.ha_enabled ? "checked" : "";
-  } 
-  else if (var == "HA_STATUS") {
+  } else if (var == "HA_STATUS") {
     return ha_connected ? "Connected" : "Not connected";
-  } 
-  else if (var == "ANIM") {
+  } else if (var == "ANIM") {
     return anim_names[anim_state];
-  } 
-  else if (var == "FTPUSERNAME") {
-    return cfg.ftp_username;
-  } 
-  else if (var == "FTPPASSWORD") {
-    return cfg.ftp_password;
-  } 
-  else if (var == "MQTTADDR") {
+  } else if (var == "FTPUSERNAME") {
+    return cfg.username;
+  } else if (var == "FTPPASSWORD") {
+    return cfg.password;
+  } else if (var == "MQTTADDR") {
     return cfg.mqtt_addr;
-  } 
-  else if (var == "MQTTUSERNAME") {
+  } else if (var == "MQTTUSERNAME") {
     return cfg.mqtt_username;
-  } 
-  else if (var == "MQTTPASSWORD") {
+  } else if (var == "MQTTPASSWORD") {
     return cfg.mqtt_password;
-  } 
-  else if (var == "DEFAULT_REGION") {
+  } else if (var == "DEFAULT_REGION") {
     // Split cfg.regioncity at '/'
     String tz = String(cfg.regioncity);
     int slashIndex = tz.indexOf('/');
     if (slashIndex > 0)
       return tz.substring(0, slashIndex);
     else
-      return "Europe"; // fallback default
-  } 
-  else if (var == "DEFAULT_CITY") {
+      return "Europe";  // fallback default
+  } else if (var == "DEFAULT_CITY") {
     String tz = String(cfg.regioncity);
     int slashIndex = tz.indexOf('/');
     if (slashIndex > 0)
       return tz.substring(slashIndex + 1);
     else
-      return "London"; // fallback default
-  } 
-  else
+      return "London";  // fallback default
+  } else
     return String();
 }
 
@@ -198,21 +222,33 @@ void web_setup() {
     });
     //Serve the config page
     httpd.on("/cfg", HTTP_GET, [](AsyncWebServerRequest *request) {
+      if (!request->authenticate(cfg.username, cfg.password)) {
+        return request->requestAuthentication();  // Sends 401 and browser shows login dialog
+     }
       request->send_P(200, "text/html", cfg_html, processor);
     });
     //Handle the GET requestions
     httpd.on("/get", HTTP_GET, [](AsyncWebServerRequest *request) {
+      if (!request->authenticate(cfg.username, cfg.password)) {
+        return request->requestAuthentication();  // Sends 401 and browser shows login dialog
+      }
       String inputMessage;
       String inputParam;
       bool cfg_changed = false;
       if (request->hasParam("ftp_enabled")) {
         //strncpy (cfg._password, request->getParam("mqtt_password")->value().c_str(), sizeof(cfg.mqtt_password));
-        inputParam = request->getParam("ftp_enabled")->value();
-        Serial.println(String("Checkbox: ") + inputParam);
-        cfg.ftp_enabled = true;
-        cfg_changed = true;
+        //inputParam = request->getParam("ftp_enabled")->value();
+        //Serial.println(String("Checkbox: ") + inputParam);
+        if (cfg.ftp_enabled == false) {
+          cfg.ftp_enabled = true;
+          cfg_changed = true;
+          ftp_setup();
+        }
       } else {
-        //  ftpSrv.end();
+        if (cfg.ftp_enabled == true) {
+          ftpSrv.end();
+          cfg_changed = true;
+        }
         cfg.ftp_enabled = false;
       }
 
@@ -226,11 +262,11 @@ void web_setup() {
       }
 
       if (request->hasParam("ftp_username")) {
-        strncpy(cfg.ftp_username, request->getParam("ftp_username")->value().c_str(), sizeof(cfg.ftp_username));
+        strncpy(cfg.username, request->getParam("ftp_username")->value().c_str(), sizeof(cfg.username));
         cfg_changed = true;
       }
       if (request->hasParam("ftp_password")) {
-        strncpy(cfg.ftp_password, request->getParam("ftp_password")->value().c_str(), sizeof(cfg.ftp_password));
+        strncpy(cfg.password, request->getParam("ftp_password")->value().c_str(), sizeof(cfg.password));
         cfg_changed = true;
       }
       if (request->hasParam("mqtt_addr")) {

@@ -9,6 +9,7 @@
 #include "LittleFS.h"
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebSrv.h>
+#include <SimpleFTPServer.h>
 
 #if FASTLED_VERSION < 3001000
 #error "Requires FastLED 3.1 or later; check github for latest code."
@@ -19,8 +20,9 @@
 #define COLOR_ORDER RGB
 #define NUM_LEDS    96
 #define BRIGHTNESS  255
-//#define TIMEZONE    10
 #define DEFAULT_REGIONCITY "Europe/London"
+#define DEFAULT_USERNAME  "hexclock"
+#define DEFAULT_PASSWORD  "groovy"
 
 CRGB leds[NUM_LEDS];
 CRGB ha_color;
@@ -34,8 +36,8 @@ bool cfg_loaded;
 struct cfg_t 
 {
   bool ftp_enabled;
-  char ftp_username[32];
-  char ftp_password[32];
+  char username[32];
+  char password[32];
   bool ha_enabled;
   char mqtt_addr[17];
   char mqtt_username[17];
