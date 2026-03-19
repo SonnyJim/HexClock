@@ -12,7 +12,7 @@ void onMqttMessage(const char* topic, const uint8_t* payload, uint16_t length) {
   // This callback is called when message from MQTT broker is received.
   // Please note that you should always verify if the message's topic is the one you expect.
   // For example: if (memcmp(topic, "myCustomTopic") == 0) { ... }
-/*
+  /*
   Serial.print("New message on topic: ");
   Serial.println(topic);
   Serial.print("Data: ");
@@ -83,7 +83,7 @@ void onRGBColorCommand(HALight::RGBColor color, HALight* sender) {
 }
 
 void ha_setup() {
-  log_write("Connecting to Homeassistant");
+  log_write("ha_setup()");
   //WiFi.macAddress(mac); //Set MAC address for hadevice
   ha_connected = false;
   if (MDNS.begin("hexclock")) {
@@ -126,18 +126,23 @@ void ha_setup() {
 }
 
 void ha_start() {
-  log_write("Connect to HA");
-  if (cfg.ha_enabled)
-    mqtt.begin(cfg.mqtt_addr, cfg.mqtt_username, cfg.mqtt_password);
-  else
-    log_write("ha_start (): Error!  Trying to start a disabled service");
+  if (!cfg.ha_enabled) {
+    log_write("ha_start(): Error! Trying to start a disabled service");
+    return;
+  }
+
+  log_write("Connecting to Home Assistant");
+
+  if (mqtt.begin(cfg.mqtt_addr, cfg.mqtt_username, cfg.mqtt_password)) {
+    log_write("mqtt.begin()");
+  } else {
+    ha_connected = false;
+    log_write("MQTT couldn't start!");
+  }
 }
+
 void ha_loop() {
   mqtt.loop();
-
-  // You can also change the state at runtime as shown below.
-  // This kind of logic can be used if you want to control your light using a button connected to the device.
-  // light.setState(true); // use any state you want
 }
 
 void ha_paint() {

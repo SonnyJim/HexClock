@@ -19,6 +19,7 @@
 #define COLOR_ORDER RGB
 #define NUM_LEDS    96
 #define BRIGHTNESS  255
+
 #define DEFAULT_REGIONCITY "Europe/London"
 #define DEFAULT_USERNAME  "hexclock"
 #define DEFAULT_PASSWORD  "groovy"
@@ -26,6 +27,7 @@
 #define DEFAULT_MQTT_USERNAME     "homeassistant" // replace with your credentials
 #define DEFAULT_MQTT_PASSWORD     ""
 #define OTA_PASSWORD "heebygeebees"
+#define HOSTNAME "Hexclock"
 
 CRGB leds[NUM_LEDS];
 CRGB ha_color;

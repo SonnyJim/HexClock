@@ -4,38 +4,42 @@ const byte DNS_PORT = 53;
 DNSServer dnsServer;
 String wifiOptions;
 
-bool tryWiFiConnect() {
-  if(strlen(cfg.wifi_essid) == 0) return false; // No SSID stored
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(cfg.wifi_essid, cfg.wifi_password);
-  Serial.printf("Trying WiFi: %s\n", cfg.wifi_essid);
 
-  unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
-    delay(500);
-    Serial.print(".");
+bool tryWiFiConnect() {
+  if (strlen(cfg.wifi_essid) != 0) {
+    WiFi.mode(WIFI_STA);
+    WiFi.setHostname(HOSTNAME);
+    WiFi.begin(cfg.wifi_essid, cfg.wifi_password);
+    Serial.printf("Trying WiFi: %s\n", cfg.wifi_essid);
+
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println();
   }
-  Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Connected to WiFi!");
     Serial.println(WiFi.localIP());
     return true;
   } else {
+    String msg = "Failed to connect to: ";
+    msg += cfg.wifi_essid;
+    log_write(msg);
     Serial.println("Failed to connect.");
     delay(5000);
     return false;
   }
 }
 
-void scanWiFi()
-{
+void scanWiFi() {
   wifiOptions = "";
 
   int n = WiFi.scanNetworks();
 
-  for (int i = 0; i < n; i++)
-  {
+  for (int i = 0; i < n; i++) {
     wifiOptions += "<option value=\"";
     wifiOptions += WiFi.SSID(i);
     wifiOptions += "\">";
@@ -43,21 +47,20 @@ void scanWiFi()
     wifiOptions += "</option>";
   }
 
-  WiFi.scanDelete(); // free memory
+  WiFi.scanDelete();  // free memory
 }
 
 void startConfigPortal() {
   Serial.println("Starting config portal...");
   scanWiFi();
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
-  WiFi.softAP("Hexclock_ConfigPortal");
+  WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0));
+  WiFi.softAP(String(HOSTNAME) + String(ESP.getChipId()));
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(DNS_PORT, "*", IPAddress(192,168,4,1));
+  dnsServer.start(DNS_PORT, "*", IPAddress(192, 168, 4, 1));
   Serial.println("AP started: ESP_ConfigPortal");
 
-  httpd.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-
+  httpd.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     String options = wifiOptions;
 
     String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
@@ -98,27 +101,27 @@ void startConfigPortal() {
     html += "</form></body></html>";
 
     request->send(200, "text/html", html);
-});
+  });
 
-  httpd.on("/save", [](AsyncWebServerRequest *request){
+  httpd.on("/save", [](AsyncWebServerRequest *request) {
     String essid;
-    if(request->hasParam("custom_essid") && request->getParam("custom_essid")->value() != "") {
+    if (request->hasParam("custom_essid") && request->getParam("custom_essid")->value() != "") {
       essid = request->getParam("custom_essid")->value();
-    } else if(request->hasParam("essid")) {
+    } else if (request->hasParam("essid")) {
       essid = request->getParam("essid")->value();
     }
 
-    if(request->hasParam("pass") && essid.length() > 0){
+    if (request->hasParam("pass") && essid.length() > 0) {
       String pass = request->getParam("pass")->value();
 
-      if(essid.length() > 32) essid = essid.substring(0,32);
-      if(pass.length() > 64) pass = pass.substring(0,64);
+      if (essid.length() > 32) essid = essid.substring(0, 32);
+      if (pass.length() > 64) pass = pass.substring(0, 64);
 
       essid.toCharArray(cfg.wifi_essid, sizeof(cfg.wifi_essid));
       pass.toCharArray(cfg.wifi_password, sizeof(cfg.wifi_password));
 
       cfg_save();
-      
+
       request->send(200, "text/html", "<h2>Saved wifi details, rebooting...</h2>");
       delay(500);
       ESP.restart();
@@ -130,8 +133,8 @@ void startConfigPortal() {
   httpd.begin();
 
   // **Loop until Wi-Fi connects**
-  
-  while(true) {
+
+  while (true) {
     dnsServer.processNextRequest();
     //delay(1); // Let AsyncWebServer handle requests
     //if(tryWiFiConnect()) break; // Exit loop if connection successful
@@ -144,7 +147,7 @@ void startConfigPortal() {
 void wifi_setup() {
   //Serial.begin(115200);
 
-  if(!tryWiFiConnect()) {
+  if (!tryWiFiConnect()) {
     startConfigPortal();
   }
 }

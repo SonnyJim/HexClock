@@ -19,7 +19,7 @@ void time_setup() {
         Serial.print(".");
         now = time(nullptr);
     }
-    log_write("\n");
+    Serial.print("\n");
 
     // Print current time
     struct tm timeinfo;
